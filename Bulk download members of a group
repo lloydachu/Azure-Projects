@@ -1,0 +1,28 @@
+Import-Module Microsoft.Graph.Groups
+
+# Authenticate to Microsoft Graph (you may need to provide your credentials) 
+ Connect-MgGraph -Scopes "Group.Read.All,GroupMember.Read.All"
+
+# Set the group ID of the group whose members you want to download 
+ $groupId = "your_group_id"
+
+# Get the group members 
+ $members = Get-MgGroupMember -GroupId $groupId -All | select * -ExpandProperty additionalProperties | Select-Object @( 
+                'id'     
+                @{  Name       = 'userPrincipalName' 
+                    Expression = { $_.AdditionalProperties["userPrincipalName"] } 
+                } 
+                @{  Name = 'displayName' 
+                Expression = { $_.AdditionalProperties["displayName"] } 
+                } 
+            )
+
+# Specify the output CSV file path 
+ $outputCsvPath = "C:\\Users\\YourUserName\\Documents\\GroupMembers.csv"
+
+$members| Export-Csv -Path $outputCsvPath -NoTypeInformation
+
+# Disconnect from Microsoft Graph 
+Disconnect-MgGraph
+
+Write-Host "Group members exported to $outputCsvPath"
