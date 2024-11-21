@@ -1,0 +1,33 @@
+Import-Module Microsoft.Graph.Groups
+
+# Authenticate to Microsoft Graph (you may need to provide your credentials) 
+ Connect-MgGraph -Scopes "Group.Read.All"
+
+# Get the group members 
+ $groups = Get-MgGroup -All | Select displayName, Id, groupTypes,mail
+
+# Create a custom object to store group data 
+$groupData = @()
+
+# Loop through each group and collect relevant data 
+foreach ($group in $groups) { 
+    if ($group.groupTypes -contains "Unified"){$groupType = "Microsoft 365"} 
+    else {$groupType = "Security"} 
+    if ($group.groupTypes -contains "DynamicMembership"){$membershipType = "Dynamic"} 
+    else {$membershipType = "Assigned"} 
+    $groupObject = [PSCustomObject]@{ 
+        Id = $group.Id 
+        DisplayName = $group.displayName 
+        Mail = $group.mail 
+        GroupType = $groupType 
+        MemebershipType = $membershipType 
+    }   
+    $groupData += $groupObject 
+}
+
+# Specify the output CSV file path 
+ $outputCsvPath = "C:\\Users\\<YourUsername>\\Documents\\Groups.csv"
+
+$groupData| Export-Csv -Path $outputCsvPath -NoTypeInformation 
+ 
+ Write-Host "Group members exported to $outputCsvPath"
