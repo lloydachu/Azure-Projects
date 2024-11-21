@@ -1,0 +1,36 @@
+# Import the Microsoft Graph module 
+Import-Module Microsoft.Graph
+
+# Authenticate to Microsoft Graph (you may need to provide your credentials) 
+Connect-MgGraph -Scopes "User.Read.All"
+
+# Get all users using Get-MgUser 
+$users = Get-MgUser -All -ConsistencyLevel eventual -Property Id, DisplayName, UserPrincipalName,UserType,OnPremisesSyncEnabled,CompanyName,CreationType
+
+# Specify the output CSV file path 
+$outputCsvPath = "C:\\Users\\YourUsername\\Documents\\Users.csv"
+
+# Create a custom object to store user data 
+$userData = @()
+
+# Loop through each user and collect relevant data 
+foreach ($user in $users) { 
+    $userObject = [PSCustomObject]@{ 
+        Id = $user.Id 
+        DisplayName = $user.DisplayName 
+        UserPrincipalName = $user.UserPrincipalName 
+        UserType = $user.UserType 
+        OnPremisesSyncEnabled = $user.OnPremisesSyncEnabled 
+        CompanyName = $user.CompanyName 
+        CreationType = $user.CreationType 
+    } 
+    $userData += $userObject 
+}
+
+# Export user data to a CSV file 
+$userData | Export-Csv -Path $outputCsvPath -NoTypeInformation
+
+# Disconnect from Microsoft Graph 
+Disconnect-MgGraph
+
+Write-Host "User data exported to $outputCsvPath"
