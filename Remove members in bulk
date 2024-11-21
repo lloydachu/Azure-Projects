@@ -1,0 +1,23 @@
+Import-Module Microsoft.Graph.Groups
+
+# Authenticate to Microsoft Graph (you may need to provide your credentials) 
+ Connect-MgGraph -Scopes "GroupMember.ReadWrite.All"
+
+# Import the CSV file 
+$members = Import-Csv -Path "C:\path\to\your\file.csv"
+
+# Define the Group ID 
+$groupId = "your-group-id"
+
+# Iterate over each member and add them to the group 
+foreach ($member in $members) { 
+    try{ 
+        Remove-MgGroupMemberByRef -GroupId $groupId -DirectoryObjectId $member.memberObjectId Write-Host "Removed $($member.memberObjectId) from the group." 
+    } 
+    Catch{ 
+        Write-Host "Error removing member $($member.memberObjectId):$($_.Exception.Message)" 
+    } 
+}
+
+# Disconnect from Microsoft Graph 
+Disconnect-MgGraph
