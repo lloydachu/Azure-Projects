@@ -1,0 +1,3 @@
+Install-Module -Name Az -AllowClobber -Scope CurrentUser
+
+Get-Module -Name Az -ListAvailable
