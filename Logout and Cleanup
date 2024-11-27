@@ -1,0 +1,7 @@
+To log out from Azure:
+
+Disconnect-AzAccount
+
+Remove the Azure module (if needed):
+
+Remove-Module -Name Az
