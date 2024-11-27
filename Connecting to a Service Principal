@@ -1,0 +1,1 @@
+Connect-AzAccount -ServicePrincipal -Tenant <TenantID> -ApplicationId <AppID> -CertificateThumbprint <Thumbprint>
