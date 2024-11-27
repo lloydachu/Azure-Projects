@@ -1,0 +1,7 @@
+Check:
+
+Get-AzSubscription
+
+Set:
+
+Set-AzContext -SubscriptionId <SubscriptionID>
