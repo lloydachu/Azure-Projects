@@ -1,0 +1,18 @@
+Get-Command -Verb connect
+Shows you all commands that have connect
+
+Get-Command -Verb get -Noun *user*
+Will should you all available Get Commands, that have "user" somewhere in the noun
+
+Cls
+Clears screen
+
+Get-Command -Verb get -Noun *group*
+Will should you all available Get Commands, that have "group" somewhere in the noun
+
+Get-Command -Verb new -Noun *user*
+
+Get-Command -Verb new -Noun *group*
+
+get-help New-AzADUser
+
