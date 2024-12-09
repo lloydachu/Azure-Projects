@@ -1,0 +1,40 @@
+# Connect to Azure AD
+Connect-AzAccount
+
+# Get all groups in Azure AD
+$allGroups = Get-AzADGroup
+
+# Initialize an array to store groups with no owners or disabled owners
+$problemGroups = @()
+
+foreach ($group in $allGroups) {
+    # Get the group's owners
+    $owners = Get-AzADGroupOwner -GroupObjectId $group.Id
+
+    if (-not $owners) {
+        # Add group to problem list if it has no owners
+        $problemGroups += [PSCustomObject]@{
+            GroupName      = $group.DisplayName
+            GroupId        = $group.Id
+            Problem        = "No Owners"
+        }
+    } else {
+        # Check if any owner is a disabled user
+        foreach ($owner in $owners) {
+            if ($owner.UserType -eq "Member" -and $owner.AccountEnabled -eq $false) {
+                $problemGroups += [PSCustomObject]@{
+                    GroupName      = $group.DisplayName
+                    GroupId        = $group.Id
+                    Problem        = "Disabled Owner"
+                }
+                break
+            }
+        }
+    }
+}
+
+# Display the results
+$problemGroups | Format-Table -AutoSize
+
+# Optionally export results to a CSV file
+$problemGroups | Export-Csv -Path "GroupsWithOwnerIssues.csv" -NoTypeInformation
