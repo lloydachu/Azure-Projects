@@ -1,0 +1,27 @@
+# Connect to Azure AD
+Connect-AzAccount
+
+# Get all Azure AD groups
+$allGroups = Get-AzADGroup
+
+# Initialize an array to store groups with no members
+$groupsWithNoMembers = @()
+
+foreach ($group in $allGroups) {
+    # Get the group's members
+    $members = Get-AzADGroupMember -GroupObjectId $group.Id
+
+    # Check if the group has no members
+    if (-not $members) {
+        $groupsWithNoMembers += [PSCustomObject]@{
+            GroupName = $group.DisplayName
+            GroupId   = $group.Id
+        }
+    }
+}
+
+# Display the results
+$groupsWithNoMembers | Format-Table -AutoSize
+
+# Optionally export results to a CSV file
+$groupsWithNoMembers | Export-Csv -Path "GroupsWithNoMembers.csv" -NoTypeInformation
