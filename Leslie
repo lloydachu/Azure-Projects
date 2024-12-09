@@ -96,3 +96,73 @@ apply logic to find groups without owners or with inactive members
 (you might need to check user statuses separately).
 5. Output the results to an Excel file, SharePoint list, or send an
 email summary.
+
+
+
+To achieve this, you'll need to use Azure Active Directory PowerShell commands. Below are steps and commands to help you find all groups with no members, groups with no owner or whose owner is inactive or has left the organization, as well as to list all groups and their owners in your Azure tenant.
+
+### Prerequisites
+1. Install the AzureAD module if you haven't already:
+```powershell
+Install-Module AzureAD
+```
+
+2. Connect to your Azure AD account:
+```powershell
+Connect-AzureAD
+```
+
+### Step 1: Get All Groups
+Retrieve all groups in your tenant:
+```powershell
+$groups = Get-AzureADGroup -All $true
+```
+
+### Step 2: Find Groups with No Members
+```powershell
+$groupsWithNoMembers = $groups | Where-Object { (Get-AzureADGroupMember -ObjectId $_.ObjectId).Count -eq 0 }
+```
+
+### Step 3: Find Groups with No Owner or Inactive Owner
+To check for groups without owners or with inactive owners:
+```powershell
+$inactiveUsers = Get-AzureADUser -Filter "AccountEnabled eq false"
+$groupsWithNoOwnerOrInactiveOwner = @()
+
+foreach ($group in $groups) {
+$owners = Get-AzureADGroupOwner -ObjectId $group.ObjectId
+if (-not $owners -or ($owners | Where-Object { $inactiveUsers.ObjectId -contains $_.ObjectId })) {
+$groupsWithNoOwnerOrInactiveOwner += $group
+}
+}
+```
+
+### Step 4: List All Groups and Their Owners
+To list all groups along with their owners:
+```powershell
+$groupOwnersList = @()
+
+foreach ($group in $groups) {
+$owners = Get-AzureADGroupOwner -ObjectId $group.ObjectId | Select-Object DisplayName, UserPrincipalName
+foreach ($owner in $owners) {
+$groupOwnersList += [PSCustomObject]@{
+GroupName = $group.DisplayName
+GroupId = $group.ObjectId
+OwnerDisplayName = $owner.DisplayName
+OwnerUPN = $owner.UserPrincipalName
+}
+}
+}
+```
+
+### Output Results
+You can output these results to the console or export to CSV:
+```powershell
+# Export groups with no members
+$groupsWithNoMembers | Export-Csv -Path "C:\Path\To\Your\Output\NoMembersGroups.csv" -NoTypeInformation
+
+# Export groups with no owner or inactive owner
+$groupsWithNoOwnerOrInactiveOwner | Export-Csv -Path "C:\Path\To\Your\Output\NoOwnerOrInactiveOwnerGroups.csv" -NoTypeInformation
+
+# Export all groups with their owners
+$groupOwnersList | Export-Csv -Path "C:\Path\To\Your\Output\GroupOwners.csv" -NoTypeInformation
