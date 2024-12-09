@@ -1,0 +1,98 @@
+Another way to obtain information about Azure Active Directory (Azure
+AD) groups is via the Azure Portal or using Azure CLI (Command-Line
+Interface). Here’s how you can use Azure CLI or the Azure Portal,
+along with Power Automate (Microsoft Flow) for more automated
+solutions.
+
+### Option 1: Using Azure CLI
+
+Azure CLI offers command-line access to Azure resources, and you can
+use it to query and manage Azure AD resources, including groups.
+
+#### Prerequisites
+1. Install Azure CLI if you haven't already. You can download it
+[here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
+2. Log in to your Azure account:
+```bash
+az login
+```
+
+#### Step 1: List All Groups
+You can list all groups in your Azure Active Directory using the
+following command:
+```bash
+az ad group list --query "[].{Name: displayName, Id: objectId}" --output table
+```
+
+#### Step 2: Find Groups with No Members
+To find groups with no members:
+1. First, get all groups:
+```bash
+groups=$(az ad group list --query "[].{Id: objectId}" --output tsv)
+```
+2. Then, loop through each group and check for members:
+```bash
+for group in $groups; do
+member_count=$(az ad group member list --group $group --query
+"length(@)" --output tsv)
+if [ "$member_count" -eq 0 ]; then
+echo "Group with no members: $group"
+fi
+done
+```
+
+#### Step 3: Find Groups with No Owners
+To identify groups that do not have owners:
+1. Loop through each group and check its owners:
+```bash
+for group in $groups; do
+owner_count=$(az ad group owner list --group $group --query
+"length(@)" --output tsv)
+if [ "$owner_count" -eq 0 ]; then
+echo "Group with no owner: $group"
+else
+for owner in $(az ad group owner list --group $group
+--query "[].userPrincipalName" --output tsv); do
+# Check if owner is inactive (you may require additional logic)
+owner_status=$(az ad user show --id $owner --query
+"accountEnabled" --output tsv)
+if [ "$owner_status" == "false" ]; then
+echo "Group with inactive owner: $group by owner: $owner"
+fi
+done
+fi
+done
+```
+
+### Option 2: Using the Azure Portal
+
+The Azure Portal provides a user-friendly interface to manage Azure AD
+and view group properties.
+
+#### Steps to Follow:
+1. **Navigate to Azure Active Directory** in the Azure Portal.
+2. Click on **Groups** to view a list of all groups.
+3. **Filter groups**: Although the portal does not have direct filters
+for "groups with no members," you can check the member count by
+selecting a group and viewing its members.
+4. **Review Owners**: Click on any group to see its owners. You can
+check manually for owners who have left the organization or are
+inactive by checking their account status.
+
+### Option 3: Using Power Automate (Microsoft Flow)
+
+Power Automate can be used to create an automated flow to retrieve,
+filter, and store this information without needing command-line
+access.
+
+#### Steps to Set Up:
+1. **Create a new flow** in Power Automate.
+2. Use the **Azure Active Directory Connector** to retrieve groups.
+You can use the action **"Get groups"**.
+3. For groups with no members, use the **"Get group members"** action
+and apply a filter to find groups where the member count is zero.
+4. For checking owners, use the **"Get group owners"** action, and
+apply logic to find groups without owners or with inactive members
+(you might need to check user statuses separately).
+5. Output the results to an Excel file, SharePoint list, or send an
+email summary.
