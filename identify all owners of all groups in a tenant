@@ -1,0 +1,40 @@
+# Connect to Azure AD
+Connect-AzAccount
+
+# Get all Azure AD groups
+$allGroups = Get-AzADGroup
+
+# Initialize an array to store group owner details
+$groupOwnersList = @()
+
+foreach ($group in $allGroups) {
+    # Get the group's owners
+    $owners = Get-AzADGroupOwner -GroupObjectId $group.Id
+
+    if ($owners) {
+        foreach ($owner in $owners) {
+            $groupOwnersList += [PSCustomObject]@{
+                GroupName      = $group.DisplayName
+                GroupId        = $group.Id
+                OwnerName      = $owner.DisplayName
+                OwnerPrincipal = $owner.UserPrincipalName
+                OwnerType      = $owner.UserType  # Indicates if it's a Member or Guest
+            }
+        }
+    } else {
+        # Add groups with no owners
+        $groupOwnersList += [PSCustomObject]@{
+            GroupName      = $group.DisplayName
+            GroupId        = $group.Id
+            OwnerName      = "No Owner"
+            OwnerPrincipal = "N/A"
+            OwnerType      = "N/A"
+        }
+    }
+}
+
+# Display the results
+$groupOwnersList | Format-Table -AutoSize
+
+# Optionally export results to a CSV file
+$groupOwnersList | Export-Csv -Path "GroupOwnersList.csv" -NoTypeInformation
