@@ -1,0 +1,76 @@
+To retrieve Azure Active Directory (AAD) service principals where a specific user has a role assignment or is an owner.
+
+# Connect to Azure AD
+Connect-AzAccount
+
+# Specify the user's UPN (email address) or Object ID
+$userPrincipalName = "<UserPrincipalName>"  # Replace with the user's UPN
+# Alternatively, use Object ID: $userObjectId = "<UserObjectId>"
+
+# Get the user's object details
+$user = Get-AzADUser -UserPrincipalName $userPrincipalName
+
+if ($user) {
+    $userId = $user.Id
+
+    # Initialize arrays to store results
+    $servicePrincipalsWithRoles = @()
+    $servicePrincipalsOwnedByUser = @()
+
+    # Get all service principals
+    $allServicePrincipals = Get-AzADServicePrincipal
+
+    # Check for roles assigned to the user in service principals
+    foreach ($sp in $allServicePrincipals) {
+        $roleAssignments = Get-AzRoleAssignment -Scope "/subscriptions/<SubscriptionId>" -ObjectId $sp.Id -ExpandPrincipalGroups
+
+        if ($roleAssignments | Where-Object { $_.PrincipalId -eq $userId }) {
+            $servicePrincipalsWithRoles += [PSCustomObject]@{
+                ServicePrincipalName = $sp.DisplayName
+                ServicePrincipalId   = $sp.AppId
+                ObjectId             = $sp.Id
+                RoleAssignedToUser   = $roleAssignments.RoleDefinitionName
+            }
+        }
+    }
+
+    # Check for ownership by the user in service principals
+    foreach ($sp in $allServicePrincipals) {
+        $owners = Get-AzADServicePrincipalOwner -ObjectId $sp.Id
+
+        if ($owners | Where-Object { $_.Id -eq $userId }) {
+            $servicePrincipalsOwnedByUser += [PSCustomObject]@{
+                ServicePrincipalName = $sp.DisplayName
+                ServicePrincipalId   = $sp.AppId
+                ObjectId             = $sp.Id
+            }
+        }
+    }
+
+    # Display results
+    Write-Output "Service Principals with Role Assignments for the User:"
+    $servicePrincipalsWithRoles | Format-Table -AutoSize
+
+    Write-Output "Service Principals Owned by the User:"
+    $servicePrincipalsOwnedByUser | Format-Table -AutoSize
+
+    # Optionally export to CSV
+    $servicePrincipalsWithRoles | Export-Csv -Path "ServicePrincipalsWithRoles.csv" -NoTypeInformation
+    $servicePrincipalsOwnedByUser | Export-Csv -Path "ServicePrincipalsOwnedByUser.csv" -NoTypeInformation
+} else {
+    Write-Output "User $userPrincipalName not found in the tenant."
+}
+
+
+Reassign Roles:
+
+New-AzRoleAssignment -ObjectId <NewPrincipalObjectId> -RoleDefinitionName <RoleName> -Scope "/subscriptions/<SubscriptionId>"
+
+Reassign Ownership:
+
+Add-AzADServicePrincipalOwner -ObjectId <ServicePrincipalObjectId> -RefObjectId <NewOwnerObjectId>
+
+Remove the current owner:
+
+Remove-AzADServicePrincipalOwner -ObjectId <ServicePrincipalObjectId> -RefObjectId <CurrentOwnerObjectId>
+
