@@ -166,3 +166,74 @@ $groupsWithNoOwnerOrInactiveOwner | Export-Csv -Path "C:\Path\To\Your\Output\NoO
 
 # Export all groups with their owners
 $groupOwnersList | Export-Csv -Path "C:\Path\To\Your\Output\GroupOwners.csv" -NoTypeInformation
+
+
+OR:
+
+# Import the Azure AD module (if not already imported)
+Import-Module Az
+
+# Authenticate to Azure
+Connect-AzAccount
+
+# Get all groups in Azure AD
+$groups = Get-AzADGroup
+
+# Initialize a list to store groups with no owners
+$groupsWithNoOwners = @()
+
+# Loop through each group and check for owners
+foreach ($group in $groups) {
+    $owners = Get-AzADGroupOwner -GroupObjectId $group.Id
+    if ($owners.Count -eq 0) {
+        $groupsWithNoOwners += [PSCustomObject]@{
+            GroupName = $group.DisplayName
+            GroupId   = $group.Id
+        }
+    }
+}
+
+# Output groups with no owners
+if ($groupsWithNoOwners.Count -gt 0) {
+    Write-Output "Groups with no owners:"
+    $groupsWithNoOwners | Format-Table -AutoSize
+} else {
+    Write-Output "No groups without owners were found."
+}
+
+# Optionally, export the results to a CSV file
+$groupsWithNoOwners | Export-Csv -Path "GroupsWithNoOwners.csv" -NoTypeInformation
+
+Groups Owned by a Particular User:
+
+# Import the Azure AD module (if not already imported)
+Import-Module Az
+
+# Authenticate to Azure
+Connect-AzAccount
+
+# Define the user's User Principal Name (UPN) or Object ID
+$userPrincipalName = "<UserUPN>" # Replace with the user's UPN or Object ID
+
+# Get the user object based on the UPN or Object ID
+$user = Get-AzADUser -UserPrincipalName $userPrincipalName
+
+if ($user) {
+    # Get all groups owned by the user
+    $ownedGroups = Get-AzADGroup | Where-Object {
+        (Get-AzADGroupOwner -GroupObjectId $_.Id).Id -contains $user.Id
+    }
+
+    # Output the results
+    if ($ownedGroups.Count -gt 0) {
+        Write-Output "Groups owned by $($user.DisplayName):"
+        $ownedGroups | Select-Object DisplayName, Id | Format-Table -AutoSize
+    } else {
+        Write-Output "No groups owned by $($user.DisplayName) were found."
+    }
+} else {
+    Write-Output "User not found: $userPrincipalName"
+}
+
+# Optional: Export the results to a CSV file
+$ownedGroups | Select-Object DisplayName, Id | Export-Csv -Path "GroupsOwnedByUser.csv" -NoTypeInformation
