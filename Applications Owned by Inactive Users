@@ -1,0 +1,50 @@
+# Connect to Azure AD
+Connect-AzAccount
+
+# Get all Azure AD applications
+$allApplications = Get-AzADApplication
+
+# Initialize an array to store applications with inactive owners
+$appsWithInactiveOwners = @()
+
+foreach ($application in $allApplications) {
+    # Get the application's owners
+    $owners = Get-AzADApplicationOwner -ApplicationObjectId $application.Id
+
+    foreach ($owner in $owners) {
+        if ($owner.ObjectType -eq "User") {
+            # Get the owner's user details
+            $ownerDetails = Get-AzADUser -ObjectId $owner.Id
+
+            if ($ownerDetails.AccountEnabled -eq $false) {
+                # Add application to the list if an owner is inactive
+                $appsWithInactiveOwners += [PSCustomObject]@{
+                    ApplicationName = $application.DisplayName
+                    ApplicationId   = $application.AppId
+                    ObjectId        = $application.Id
+                    InactiveOwner   = $ownerDetails.UserPrincipalName
+                }
+                break  # Stop checking further owners once an inactive owner is found
+            }
+        }
+    }
+}
+
+# Display the results
+$appsWithInactiveOwners | Format-Table -AutoSize
+
+# Optionally export results to a CSV file
+$appsWithInactiveOwners | Export-Csv -Path "ApplicationsWithInactiveOwners.csv" -NoTypeInformation
+
+
+Reassign Ownership:
+
+    Add a new owner for applications with inactive owners:
+
+Add-AzADApplicationOwner -ApplicationObjectId <ApplicationObjectId> -OwnerObjectId <NewOwnerObjectId>
+
+Remove Inactive Owners:
+
+    Remove the inactive user as an owner:
+
+Remove-AzADApplicationOwner -ApplicationObjectId <ApplicationObjectId> -OwnerObjectId <InactiveOwnerObjectId>
