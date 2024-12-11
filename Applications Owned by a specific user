@@ -1,0 +1,53 @@
+# Connect to Azure AD
+Connect-AzAccount
+
+# Specify the user's UPN (email address) or Object ID
+$userPrincipalName = "<UserPrincipalName>"  # Replace with the user's UPN
+# Alternatively, use Object ID: $userObjectId = "<UserObjectId>"
+
+# Get the user object to retrieve their Object ID
+$user = Get-AzADUser -UserPrincipalName $userPrincipalName
+
+if ($user) {
+    $userId = $user.Id
+
+    # Get all applications in the tenant
+    $applications = Get-AzADApplication
+
+    # Filter applications owned by the user
+    $userOwnedApplications = $applications | Where-Object {
+        (Get-AzADApplicationOwner -ApplicationObjectId $_.Id | Where-Object { $_.Id -eq $userId })
+    }
+
+    # Display the results
+    if ($userOwnedApplications) {
+        $userOwnedApplications | ForEach-Object {
+            [PSCustomObject]@{
+                ApplicationName = $_.DisplayName
+                ApplicationId   = $_.AppId
+                ObjectId        = $_.Id
+            }
+        } | Format-Table -AutoSize
+    } else {
+        Write-Output "No applications are owned by the user $userPrincipalName."
+    }
+} else {
+    Write-Output "User $userPrincipalName not found in the tenant."
+}
+
+# Optionally export the results to a CSV file
+$userOwnedApplications | Export-Csv -Path "UserOwnedApplications.csv" -NoTypeInformation
+
+
+Reassign Application Ownership:
+
+    To add a new owner to an application, use:
+Add-AzADApplicationOwner -ApplicationObjectId <ApplicationObjectId> -OwnerObjectId <NewOwnerObjectId>
+
+
+Remove User as Owner:
+
+    To remove the user as an owner:
+
+Remove-AzADApplicationOwner -ApplicationObjectId <ApplicationObjectId> -OwnerObjectId <UserObjectId>
+
