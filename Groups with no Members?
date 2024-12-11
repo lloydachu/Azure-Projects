@@ -25,3 +25,32 @@ $groupsWithNoMembers | Format-Table -AutoSize
 
 # Optionally export results to a CSV file
 $groupsWithNoMembers | Export-Csv -Path "GroupsWithNoMembers.csv" -NoTypeInformation
+
+
+Other options:
+
+# Get all groups in Azure AD
+$groups = Get-AzADGroup
+
+foreach ($group in $groups) {
+    Write-Output "Group: $($group.DisplayName)"
+    $members = Get-AzADGroupMember -GroupObjectId $group.Id
+    foreach ($member in $members) {
+        Write-Output "  Member: $($member.DisplayName) ($($member.UserPrincipalName))"
+    }
+}
+
+
+Identify Stale Groups (No Members)
+
+$groups = Get-AzADGroup
+
+foreach ($group in $groups) {
+    $members = Get-AzADGroupMember -GroupObjectId $group.Id
+    if ($members.Count -eq 0) {
+        Write-Output "Stale Group: $($group.DisplayName)"
+    }
+}
+
+
+
