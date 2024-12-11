@@ -1,3 +1,13 @@
+# List applications owned by the user
+Get-AzADApplication | Where-Object { $_.Owners -contains '<UserObjectId>' }
+
+# List service principals associated with the user
+Get-AzADServicePrincipal | Where-Object { $_.Owners -contains '<UserObjectId>' }
+
+# Add a new owner to the application
+Add-AzADApplicationOwner -ObjectId <AppObjectId> -OwnerObjectId <NewOwnerObjectId>
+
+
 # Connect to Azure AD
 Connect-AzAccount
 
