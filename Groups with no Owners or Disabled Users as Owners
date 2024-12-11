@@ -1,3 +1,8 @@
+Assign New Owners:
+Add-AzADGroupOwner -GroupObjectId <GroupId> -OwnerObjectId <NewOwnerObjectId>
+
+
+
 # Connect to Azure AD
 Connect-AzAccount
 
