@@ -1,3 +1,8 @@
+Assign New Owners:
+Add-AzADGroupOwner -GroupObjectId <GroupId> -OwnerObjectId <NewOwnerObjectId>
+
+
+
 Another way to obtain information about Azure Active Directory (Azure
 AD) groups is via the Azure Portal or using Azure CLI (Command-Line
 Interface). Here’s how you can use Azure CLI or the Azure Portal,
