@@ -1,0 +1,76 @@
+Configuring a SharePoint file, such as a fillable PDF form, to meet your requirements involves a combination of SharePoint permissions management, PDF form design, and workflow configurations to ensure the form can be reused securely without exposing sensitive data. Here’s how to achieve this:
+Step 1: Set Up the Fillable PDF
+
+    Create a Template PDF Form:
+        Use Adobe Acrobat or similar software to design the fillable form.
+        Ensure the form fields are set to clear/reset upon save to avoid retaining user input.
+
+    Disable Save Field Data:
+        Configure the form to disallow saving filled-out data by enabling only print or download options.
+        In Adobe Acrobat:
+            Go to File > Properties > Security tab.
+            Choose Restrict Editing or set the file as Read Only.
+
+    Save as a Secure Template:
+        Save the form and ensure it is locked to prevent editing of the original template.
+
+Step 2: Upload the Template to SharePoint
+
+    Create a Document Library:
+        Create a dedicated document library in SharePoint to store the template.
+        For example: "Reusable Forms Library."
+
+    Upload the Form:
+        Upload the PDF template to this library.
+
+Step 3: Configure SharePoint Permissions
+
+    Restrict User Access to the Template:
+        Navigate to the document library.
+        Select the template file > Manage Access > Advanced Permissions Settings.
+        Break permission inheritance for this library by clicking Stop Inheriting Permissions.
+
+    Grant Users View-Only Access:
+        Assign users Read-Only or View Only access to the template file:
+            Read-Only: Users can view and download but cannot edit the template.
+            View Only: Users can only view the template in the browser and cannot download or print.
+
+    Allow Download for Individual Forms:
+        To enable users to download only their completed forms, use a separate folder or library where they can upload and manage their completed forms.
+
+Step 4: Automate the Workflow
+
+    Use Power Automate (Optional):
+        Automate workflows to reset or clean up the template after use:
+            Set up a Power Automate flow to move completed forms to another library or delete them after download.
+        Example: Trigger the workflow when a file is uploaded to the Completed Forms Library.
+
+    Prevent Data Overwriting:
+        If users upload their filled forms to SharePoint, ensure files have unique names by appending a timestamp or user identifier.
+
+Step 5: Educate Users on Form Usage
+
+    Instructions for Users:
+        Inform users to:
+            Download the template form.
+            Fill it out locally.
+            Save it as a new file (with a unique name).
+            Upload their completed form (if required).
+    Train on Secure Handling:
+        Ensure users understand they should not modify the original template.
+
+Step 6: Test the Setup
+
+    Perform the following checks:
+        Users can access the template and fill it out.
+        Completed forms are not saved in a way that exposes previous users’ data.
+        The original template remains unchanged and secure.
+
+Optional Enhancements
+
+    Protect the Original Template:
+        Use Information Rights Management (IRM) in SharePoint to prevent unauthorized actions like copying or downloading.
+    Use Separate Libraries:
+        Keep the template in a secure library and allow users to work with their completed forms in a different library.
+
+By following these steps, you ensure that users can safely fill out and download the form without exposing sensitive information, while keeping the template secure and reusable.
