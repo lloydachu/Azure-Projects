@@ -51,3 +51,58 @@ Remove User as Owner:
 
 Remove-AzADApplicationOwner -ApplicationObjectId <ApplicationObjectId> -OwnerObjectId <UserObjectId>
 
+
+OR:
+
+# Import the Azure AD module (if not already imported)
+Import-Module Az
+
+# Authenticate to Azure
+Connect-AzAccount
+
+# Define the user's User Principal Name (UPN) or Object ID
+$userPrincipalName = "<UserUPN>" # Replace with the user's UPN (e.g., user@domain.com)
+
+# Get the user object based on the UPN or Object ID
+$user = Get-AzADUser -UserPrincipalName $userPrincipalName
+
+if ($user) {
+    # Retrieve all Azure AD applications
+    $applications = Get-AzADApplication
+
+    # Initialize a list to store applications where the user is the Managed Identity
+    $appsWithManagedIdentity = @()
+
+    # Check each application for the user as the Managed Identity
+    foreach ($app in $applications) {
+        $appManagedIdentities = Get-AzADServicePrincipal -Filter "AppId eq '$($app.AppId)'"
+
+        foreach ($sp in $appManagedIdentities) {
+            if ($sp.DisplayName -eq $user.DisplayName) {
+                $appsWithManagedIdentity += [PSCustomObject]@{
+                    ApplicationName = $app.DisplayName
+                    ApplicationId   = $app.AppId
+                    ManagedIdentity = $sp.DisplayName
+                }
+            }
+        }
+    }
+
+    # Output results
+    if ($appsWithManagedIdentity.Count -gt 0) {
+        Write-Output "Applications with Managed Identity assigned to $($user.DisplayName):"
+        $appsWithManagedIdentity | Format-Table -AutoSize
+    } else {
+        Write-Output "No applications found with Managed Identity assigned to $($user.DisplayName)."
+    }
+} else {
+    Write-Output "User not found: $userPrincipalName"
+}
+
+# Optional: Export the results to a CSV file
+$appsWithManagedIdentity | Export-Csv -Path "ApplicationsWithManagedIdentity.csv" -NoTypeInformation
+
+
+
+
+
